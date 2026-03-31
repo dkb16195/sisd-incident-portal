@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { IncidentStatus } from '@/types/database'
+import type { IncidentStatus, StudentRole } from '@/types/database'
 
 async function getUser() {
   const supabase = await createClient()
@@ -40,6 +40,7 @@ export interface ChecklistData {
   referred_to_deputy_notes: string | null
   sanctions_applied: boolean
   sanctions_applied_date: string | null
+  sanctions_applied_type: string | null
   sanctions_applied_notes: string | null
   follow_up_scheduled: boolean
   follow_up_scheduled_date: string | null
@@ -70,6 +71,25 @@ export async function addComment(incidentId: string, body: string) {
   const { error } = await supabase
     .from('comments')
     .insert({ incident_id: incidentId, author_id: user.id, body: trimmed })
+
+  if (error) return { error: error.message }
+  revalidatePath(`/incidents/${incidentId}`)
+  return {}
+}
+
+// ── Update student role ────────────────────────────────────────────────────
+export async function updateStudentRole(
+  incidentStudentId: string,
+  role: StudentRole,
+  incidentId: string
+) {
+  const { supabase, user } = await getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('incident_students')
+    .update({ role })
+    .eq('id', incidentStudentId)
 
   if (error) return { error: error.message }
   revalidatePath(`/incidents/${incidentId}`)

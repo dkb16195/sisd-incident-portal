@@ -8,6 +8,8 @@ export type IncidentType =
   | 'theft'
   | 'property_damage'
   | 'safeguarding'
+  | 'vaping'
+  | 'contraband'
   | 'other'
 export type IncidentStatus = 'open' | 'in_progress' | 'resolved' | 'referred'
 export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical'
@@ -72,6 +74,7 @@ export interface Database {
           id: string
           title: string
           incident_type: IncidentType
+          custom_incident_type: string | null
           description: string
           incident_date: string
           incident_time: string | null
@@ -88,6 +91,7 @@ export interface Database {
           id?: string
           title: string
           incident_type: IncidentType
+          custom_incident_type?: string | null
           description: string
           incident_date: string
           incident_time?: string | null
@@ -104,6 +108,7 @@ export interface Database {
           id?: string
           title?: string
           incident_type?: IncidentType
+          custom_incident_type?: string | null
           description?: string
           incident_date?: string
           incident_time?: string | null
@@ -180,6 +185,7 @@ export interface Database {
           referred_to_deputy_notes: string | null
           sanctions_applied: boolean
           sanctions_applied_date: string | null
+          sanctions_applied_type: string | null
           sanctions_applied_notes: string | null
           follow_up_scheduled: boolean
           follow_up_scheduled_date: string | null
@@ -199,6 +205,7 @@ export interface Database {
           referred_to_deputy_notes?: string | null
           sanctions_applied?: boolean
           sanctions_applied_date?: string | null
+          sanctions_applied_type?: string | null
           sanctions_applied_notes?: string | null
           follow_up_scheduled?: boolean
           follow_up_scheduled_date?: string | null
@@ -218,6 +225,7 @@ export interface Database {
           referred_to_deputy_notes?: string | null
           sanctions_applied?: boolean
           sanctions_applied_date?: string | null
+          sanctions_applied_type?: string | null
           sanctions_applied_notes?: string | null
           follow_up_scheduled?: boolean
           follow_up_scheduled_date?: string | null
@@ -281,6 +289,7 @@ export interface Database {
       incident_status: IncidentStatus
       incident_severity: IncidentSeverity
       student_role: StudentRole
+      [key: string]: string
     }
     CompositeTypes: Record<string, never>
   }

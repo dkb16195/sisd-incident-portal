@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badge'
-import { formatDate, isOverdue, checklistProgress, INCIDENT_TYPE_LABELS } from '@/lib/utils'
+import { formatDate, isOverdue, checklistProgress, getIncidentTypeLabel } from '@/lib/utils'
 import type { IncidentWithStudents } from '@/types/database'
 
 interface Props {
@@ -74,7 +74,7 @@ export default function IncidentTable({ incidents, currentUserId, userRole }: Pr
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-gray-600">
-                  {INCIDENT_TYPE_LABELS[incident.incident_type] ?? incident.incident_type}
+                  {getIncidentTypeLabel(incident.incident_type, incident.custom_incident_type)}
                 </td>
                 <td className="px-4 py-3 text-gray-600">{incident.grade}</td>
                 <td className="px-4 py-3">

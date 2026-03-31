@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { AlertTriangle, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { AlertTriangle, TrendingUp, Clock, CheckCircle, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import IncidentsByTypeChart from '@/components/dashboard/IncidentsByTypeChart'
 import IncidentsTrendChart from '@/components/dashboard/IncidentsTrendChart'
@@ -126,6 +126,7 @@ export default async function DashboardPage() {
       icon: Clock,
       colour: 'text-blue-600',
       bg: 'bg-blue-50',
+      href: '/incidents?status=open',
     },
     {
       label: 'Opened this week',
@@ -133,6 +134,7 @@ export default async function DashboardPage() {
       icon: TrendingUp,
       colour: 'text-[#1B3A6B]',
       bg: 'bg-[#1B3A6B]/5',
+      href: '/incidents',
     },
     {
       label: 'Overdue (>14 days)',
@@ -140,6 +142,7 @@ export default async function DashboardPage() {
       icon: AlertTriangle,
       colour: 'text-amber-600',
       bg: 'bg-amber-50',
+      href: '/incidents?status=open',
     },
     {
       label: 'Resolved this month',
@@ -147,6 +150,7 @@ export default async function DashboardPage() {
       icon: CheckCircle,
       colour: 'text-green-600',
       bg: 'bg-green-50',
+      href: '/incidents?status=resolved',
     },
   ]
 
@@ -160,20 +164,27 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards — clickable */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map(({ label, value, icon: Icon, colour, bg }) => (
-          <div key={label} className="bg-white rounded-xl border border-gray-200 p-5">
+        {statCards.map(({ label, value, icon: Icon, colour, bg, href }) => (
+          <Link
+            key={label}
+            href={href}
+            className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-gray-300 transition-all group"
+          >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs text-gray-400 mb-1">{label}</p>
+                <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                  {label}
+                  <ExternalLink size={10} className="opacity-0 group-hover:opacity-40 transition-opacity" />
+                </p>
                 <p className={`text-3xl font-bold ${colour}`}>{value}</p>
               </div>
               <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center`}>
                 <Icon size={18} className={colour} />
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

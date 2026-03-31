@@ -24,7 +24,48 @@ export const INCIDENT_TYPE_LABELS: Record<string, string> = {
   theft: 'Theft',
   property_damage: 'Property Damage',
   safeguarding: 'Safeguarding',
+  vaping: 'Vaping',
+  contraband: 'Contraband',
   other: 'Other',
+}
+
+/**
+ * Returns the display label for an incident type.
+ * When type is 'other' and a custom value was entered, returns that value.
+ */
+export function getIncidentTypeLabel(
+  incidentType: string,
+  customType?: string | null
+): string {
+  if (incidentType === 'other' && customType?.trim()) return customType.trim()
+  return INCIDENT_TYPE_LABELS[incidentType] ?? incidentType
+}
+
+export const SANCTION_LABELS: Record<string, string> = {
+  break_time_reflection: 'Break time reflection',
+  lunchtime_reflection: 'Lunchtime reflection',
+  after_school_reflection: 'After school reflection',
+  internal_reflection_day: 'Internal reflection day',
+  behaviour_contract: 'Behaviour contract',
+  monitoring_card: 'Monitoring card',
+  warning_applied: 'Warning applied',
+  intervention_isams: 'Intervention on iSAMS',
+  other: 'Other',
+}
+
+export const SANCTION_TYPES = Object.keys(SANCTION_LABELS)
+
+/**
+ * Returns the display label for a sanction.
+ * When type is 'other' and custom notes are provided, appends them.
+ */
+export function getSanctionLabel(
+  sanctionType: string | null | undefined,
+  notes?: string | null
+): string {
+  if (!sanctionType) return '—'
+  if (sanctionType === 'other') return notes?.trim() ? `Other: ${notes.trim()}` : 'Other'
+  return SANCTION_LABELS[sanctionType] ?? sanctionType
 }
 
 export const INCIDENT_STATUS_LABELS: Record<string, string> = {

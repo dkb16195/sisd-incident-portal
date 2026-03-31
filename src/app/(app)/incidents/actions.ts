@@ -8,6 +8,7 @@ import type { IncidentType, IncidentSeverity, StudentRole } from '@/types/databa
 export interface NewIncidentData {
   title: string
   incident_type: IncidentType
+  custom_incident_type?: string
   severity: IncidentSeverity
   incident_date: string
   incident_time?: string
@@ -28,6 +29,9 @@ export async function createIncident(data: NewIncidentData) {
     .insert({
       title: data.title,
       incident_type: data.incident_type,
+      custom_incident_type: data.incident_type === 'other'
+        ? (data.custom_incident_type?.trim() || null)
+        : null,
       severity: data.severity,
       incident_date: data.incident_date,
       incident_time: data.incident_time || null,

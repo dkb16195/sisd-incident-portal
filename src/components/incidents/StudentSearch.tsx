@@ -12,14 +12,13 @@ export interface SelectedStudent {
 }
 
 interface Props {
-  grade: string
   selected: SelectedStudent[]
   onChange: (students: SelectedStudent[]) => void
 }
 
 const ROLES: StudentRole[] = ['involved', 'victim', 'perpetrator', 'witness']
 
-export default function StudentSearch({ grade, selected, onChange }: Props) {
+export default function StudentSearch({ selected, onChange }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Student[]>([])
   const [loading, setLoading] = useState(false)
@@ -38,7 +37,6 @@ export default function StudentSearch({ grade, selected, onChange }: Props) {
       const { data } = await supabase
         .from('students')
         .select('*')
-        .eq('grade', grade)
         .ilike('full_name', `%${q}%`)
         .order('full_name')
         .limit(10)
@@ -47,7 +45,7 @@ export default function StudentSearch({ grade, selected, onChange }: Props) {
       setActiveIndex(0)
       setLoading(false)
     },
-    [grade, selectedIds]
+    [selectedIds]
   )
 
   useEffect(() => {
@@ -115,8 +113,8 @@ export default function StudentSearch({ grade, selected, onChange }: Props) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => query.length >= 2 && setOpen(true)}
-            placeholder={grade ? `Search ${grade} students…` : 'Select a grade first'}
-            disabled={!grade}
+            placeholder="Search students by name…"
+            disabled={false}
             className="input pl-9"
           />
           {loading && (
@@ -153,7 +151,7 @@ export default function StudentSearch({ grade, selected, onChange }: Props) {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{student.full_name}</p>
-                        <p className="text-xs text-gray-400">{student.year_group} · {student.student_id}</p>
+                        <p className="text-xs text-gray-400">{student.grade} · {student.year_group} · {student.student_id}</p>
                       </div>
                       <UserPlus size={14} className="ml-auto text-gray-300" />
                     </button>

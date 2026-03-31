@@ -6,7 +6,7 @@ import { createIncident, type NewIncidentData } from '@/app/(app)/incidents/acti
 import StudentSearch, { type SelectedStudent } from './StudentSearch'
 import Button from '@/components/ui/Button'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badge'
-import { cn, GRADES, INCIDENT_TYPE_LABELS, SEVERITY_LABELS, STUDENT_ROLE_LABELS, formatDate } from '@/lib/utils'
+import { cn, GRADES, INCIDENT_TYPE_LABELS, SEVERITY_LABELS, STUDENT_ROLE_LABELS, formatDate, getIncidentTypeLabel } from '@/lib/utils'
 import type { IncidentType, IncidentSeverity } from '@/types/database'
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
 interface FormState {
   title: string
   incident_type: IncidentType | ''
+  custom_incident_type: string
   severity: IncidentSeverity | ''
   incident_date: string
   incident_time: string
@@ -29,7 +30,7 @@ const today = new Date().toISOString().split('T')[0]
 
 const INCIDENT_TYPES: IncidentType[] = [
   'bullying', 'physical_altercation', 'verbal_misconduct', 'peer_conflict',
-  'social_media', 'theft', 'property_damage', 'safeguarding', 'other',
+  'social_media', 'theft', 'property_damage', 'safeguarding', 'vaping', 'contraband', 'other',
 ]
 
 const SEVERITIES: IncidentSeverity[] = ['low', 'medium', 'high', 'critical']
@@ -41,6 +42,7 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
   const [form, setForm] = useState<FormState>({
     title: '',
     incident_type: '',
+    custom_incident_type: '',
     severity: '',
     incident_date: today,
     incident_time: '',
@@ -60,7 +62,7 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
 
   // ── Step validation ────────────────────────────────────────────────────────
   function step1Valid() {
-    return (
+    const baseValid = !!(
       form.title.trim() &&
       form.incident_type &&
       form.severity &&
@@ -69,6 +71,9 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
       form.grade &&
       form.description.trim()
     )
+    // If 'other' is selected, require a custom type
+    if (form.incident_type === 'other' && !form.custom_incident_type.trim()) return false
+    return baseValid
   }
 
   function handleSubmit() {
@@ -77,6 +82,9 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
       const result = await createIncident({
         title: form.title.trim(),
         incident_type: form.incident_type as IncidentType,
+        custom_incident_type: form.incident_type === 'other'
+          ? form.custom_incident_type.trim()
+          : undefined,
         severity: form.severity as IncidentSeverity,
         incident_date: form.incident_date,
         incident_time: form.incident_time || undefined,
@@ -152,6 +160,14 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
                   <option key={t} value={t}>{INCIDENT_TYPE_LABELS[t]}</option>
                 ))}
               </select>
+              {form.incident_type === 'other' && (
+                <input
+                  className="input mt-2"
+                  placeholder="Describe the incident type…"
+                  value={form.custom_incident_type}
+                  onChange={(e) => set('custom_incident_type', e.target.value)}
+                />
+              )}
             </div>
             <div>
               <label className="label">Severity <span className="text-red-500">*</span></label>
@@ -242,11 +258,10 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
           <div>
             <p className="text-sm text-gray-500 mb-4">
-              Search for students in <span className="font-medium text-gray-700">{form.grade}</span> and assign their role in this incident.
+              Search for students from any grade and assign their role in this incident.
               You can proceed without adding any students.
             </p>
             <StudentSearch
-              grade={form.grade}
               selected={students}
               onChange={setStudents}
             />
@@ -281,7 +296,9 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
               <div className="flex gap-6">
                 <div>
                   <p className="text-gray-500 text-xs mb-1">Type</p>
-                  <p className="text-gray-700">{INCIDENT_TYPE_LABELS[form.incident_type as IncidentType]}</p>
+                  <p className="text-gray-700">
+                    {getIncidentTypeLabel(form.incident_type as IncidentType, form.custom_incident_type)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs mb-1">Severity</p>

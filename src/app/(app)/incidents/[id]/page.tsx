@@ -6,7 +6,8 @@ import { SeverityBadge, StatusBadge } from '@/components/ui/Badge'
 import IncidentStatusSelect from '@/components/incidents/IncidentStatusSelect'
 import InvestigationChecklist from '@/components/incidents/InvestigationChecklist'
 import CommentThread from '@/components/incidents/CommentThread'
-import { formatDate, INCIDENT_TYPE_LABELS, STUDENT_ROLE_LABELS } from '@/lib/utils'
+import StudentRoleList from '@/components/incidents/StudentRoleList'
+import { formatDate, getIncidentTypeLabel } from '@/lib/utils'
 import type { Profile, IncidentWithStudents, CommentWithAuthor } from '@/types/database'
 
 export default async function IncidentDetailPage({
@@ -79,7 +80,7 @@ export default async function IncidentDetailPage({
             <SeverityBadge severity={incident.severity} />
             <StatusBadge status={incident.status} />
             <span className="text-xs text-gray-400">
-              {INCIDENT_TYPE_LABELS[incident.incident_type]} · {incident.grade}
+              {getIncidentTypeLabel(incident.incident_type, incident.custom_incident_type)} · {incident.grade}
             </span>
           </div>
         </div>
@@ -155,33 +156,10 @@ export default async function IncidentDetailPage({
             <h2 className="text-xs font-semibold uppercase tracking-wide text-[#1B3A6B] mb-3">
               Students ({incident.incident_students?.length ?? 0})
             </h2>
-            {!incident.incident_students?.length ? (
-              <p className="text-xs text-gray-400">No students linked.</p>
-            ) : (
-              <ul className="space-y-2.5">
-                {incident.incident_students.map(({ student, role }) => (
-                  <li key={student.id} className="flex items-start gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-[#1B3A6B]/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <span className="text-[#1B3A6B] text-xs font-medium">
-                        {student.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <Link
-                        href={`/students/${student.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-[#1B3A6B] transition-colors leading-snug block truncate"
-                      >
-                        {student.full_name}
-                      </Link>
-                      <p className="text-xs text-gray-400">{student.year_group}</p>
-                      <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mt-0.5 inline-block">
-                        {STUDENT_ROLE_LABELS[role]}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <StudentRoleList
+              incidentId={incident.id}
+              incidentStudents={incident.incident_students ?? []}
+            />
           </section>
 
           {/* Meta */}
