@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* SISD brand colours */
+  --sisd-navy:   #1B3A6B;
+  --sisd-gold:   #E8A020;
+  --background:  #F8F9FA;
+  --foreground:  #1A1A2E;
+
+  /* Status colours */
+  --success:     #28A745;
+  --warning:     #FFC107;
+  --danger:      #DC3545;
+
+  /* Severity */
+  --severity-low:      #6B7280;
+  --severity-medium:   #E8A020;
+  --severity-high:     #F97316;
+  --severity-critical: #DC3545;
+
+  /* Status badges */
+  --status-open:        #3B82F6;
+  --status-in_progress: #E8A020;
+  --status-resolved:    #28A745;
+  --status-referred:    #8B5CF6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter, 'Inter', sans-serif);
+  min-height: 100%;
+}
+
+/* ─── Shared form primitives ─────────────────────────────────── */
+.input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #D1D5DB;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.input:focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px #1B3A6B;
+}
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.375rem;
 }
