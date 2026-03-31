@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badge'
+import ISAMSExportButton from '@/components/students/ISAMSExportButton'
 import { formatDate, INCIDENT_TYPE_LABELS, STUDENT_ROLE_LABELS } from '@/lib/utils'
 import type { Profile, Student, IncidentStudent, Incident } from '@/types/database'
 
@@ -73,16 +74,19 @@ export default async function StudentProfilePage({
       </Link>
 
       {/* Student header */}
-      <div className="flex items-center gap-5 mb-8">
-        <div className="w-14 h-14 rounded-full bg-[#1B3A6B]/10 flex items-center justify-center shrink-0">
-          <span className="text-[#1B3A6B] text-xl font-semibold">{initials}</span>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 rounded-full bg-[#1B3A6B]/10 flex items-center justify-center shrink-0">
+            <span className="text-[#1B3A6B] text-xl font-semibold">{initials}</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-[#1B3A6B]">{student.full_name}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {student.grade} · {student.year_group} · <span className="font-mono">{student.student_id}</span>
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-[#1B3A6B]">{student.full_name}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {student.grade} · {student.year_group} · <span className="font-mono">{student.student_id}</span>
-          </p>
-        </div>
+        <ISAMSExportButton student={student} involvements={involvements ?? []} />
       </div>
 
       {/* Stat cards */}

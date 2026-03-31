@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
@@ -34,9 +35,13 @@ export default function Sidebar({ profile }: SidebarProps) {
     <aside className="flex flex-col w-64 min-h-screen bg-[#1B3A6B] text-white shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-white/10">
-        <div className="w-8 h-8 rounded-full bg-[#E8A020] flex items-center justify-center shrink-0">
-          <span className="text-white font-bold text-sm">S</span>
-        </div>
+        <Image
+          src="/sisd-logo.jpeg"
+          alt="SISD"
+          width={32}
+          height={32}
+          className="rounded-md shrink-0"
+        />
         <div className="leading-tight">
           <p className="font-semibold text-sm">SISD</p>
           <p className="text-xs text-white/60">Incident Portal</p>
@@ -82,8 +87,8 @@ export default function Sidebar({ profile }: SidebarProps) {
       {/* User + sign out */}
       <div className="px-3 py-4 border-t border-white/10">
         <div className="flex items-center gap-3 px-3 py-2 mb-1">
-          <div className="w-8 h-8 rounded-full bg-[#E8A020]/30 flex items-center justify-center shrink-0">
-            <span className="text-[#E8A020] font-semibold text-xs">
+          <div className="w-8 h-8 rounded-full bg-[#CC2229]/30 flex items-center justify-center shrink-0">
+            <span className="text-[#CC2229] font-semibold text-xs">
               {profile.full_name
                 .split(' ')
                 .map((n) => n[0])

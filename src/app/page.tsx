@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import LoginForm from '@/components/auth/LoginForm'
 
 export default function LoginPage() {
@@ -6,11 +7,15 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo + school name */}
         <div className="text-center mb-8">
-          <div
-            className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ backgroundColor: '#1B3A6B' }}
-          >
-            <span className="text-white font-bold text-xl">S</span>
+          <div className="flex items-center justify-center mb-4">
+            <Image
+              src="/sisd-logo.jpeg"
+              alt="SISD"
+              width={72}
+              height={72}
+              className="rounded-lg"
+              priority
+            />
           </div>
           <h1 className="text-2xl font-bold" style={{ color: '#1B3A6B' }}>
             SISD Incident Portal
