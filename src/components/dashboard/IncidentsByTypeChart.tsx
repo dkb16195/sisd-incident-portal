@@ -41,7 +41,7 @@ export default function IncidentsByTypeChart({ data }: { data: DataPoint[] }) {
           tickLine={false}
         />
         <Tooltip
-          formatter={(val: number) => [val, 'Incidents']}
+          formatter={(val) => [val, 'Incidents']}
           contentStyle={{
             fontSize: 12,
             borderRadius: 8,

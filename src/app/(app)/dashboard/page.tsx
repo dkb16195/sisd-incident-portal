@@ -30,11 +30,8 @@ export default async function DashboardPage() {
   const thirtyDaysAgo = new Date(now)
   thirtyDaysAgo.setDate(now.getDate() - 30)
 
-  // Base query filter for GLCs
-  const gradeFilter = (q: ReturnType<typeof supabase.from>) =>
-    profile?.role === 'glc' && profile.grade
-      ? (q as any).eq('grade', profile.grade)
-      : q
+  const isGLC = profile?.role === 'glc' && !!profile.grade
+  const glcGrade = profile?.grade ?? ''
 
   // Stat queries in parallel
   const [
@@ -44,24 +41,39 @@ export default async function DashboardPage() {
     { data: allRecentIncidents },
     { data: thirtyDayIncidents },
   ] = await Promise.all([
-    gradeFilter(supabase.from('incidents').select('*', { count: 'exact', head: true }))
-      .in('status', ['open', 'in_progress']),
-    gradeFilter(supabase.from('incidents').select('*', { count: 'exact', head: true }))
-      .gte('created_at', startOfWeek.toISOString()),
-    gradeFilter(supabase.from('incidents').select('*', { count: 'exact', head: true }))
-      .eq('status', 'resolved')
-      .gte('updated_at', startOfMonth.toISOString()),
-    gradeFilter(
-      supabase.from('incidents').select('id, title, severity, status, incident_type, incident_date, created_at, grade')
-    )
-      .in('status', ['open', 'in_progress'])
+    (isGLC
+      ? supabase.from('incidents').select('*', { count: 'exact', head: true }).eq('grade', glcGrade)
+      : supabase.from('incidents').select('*', { count: 'exact', head: true })
+    ).in('status', ['open', 'in_progress']),
+
+    (isGLC
+      ? supabase.from('incidents').select('*', { count: 'exact', head: true }).eq('grade', glcGrade)
+      : supabase.from('incidents').select('*', { count: 'exact', head: true })
+    ).gte('created_at', startOfWeek.toISOString()),
+
+    (isGLC
+      ? supabase.from('incidents').select('*', { count: 'exact', head: true }).eq('grade', glcGrade)
+      : supabase.from('incidents').select('*', { count: 'exact', head: true })
+    ).eq('status', 'resolved').gte('updated_at', startOfMonth.toISOString()),
+
+    (isGLC
+      ? supabase.from('incidents')
+          .select('id, title, severity, status, incident_type, incident_date, created_at, grade')
+          .eq('grade', glcGrade)
+      : supabase.from('incidents')
+          .select('id, title, severity, status, incident_type, incident_date, created_at, grade')
+    ).in('status', ['open', 'in_progress'])
       .order('created_at', { ascending: false })
       .limit(5)
       .returns<Incident[]>(),
-    gradeFilter(
-      supabase.from('incidents').select('id, incident_type, severity, created_at, incident_date')
-    )
-      .gte('created_at', thirtyDaysAgo.toISOString())
+
+    (isGLC
+      ? supabase.from('incidents')
+          .select('id, incident_type, severity, created_at, incident_date')
+          .eq('grade', glcGrade)
+      : supabase.from('incidents')
+          .select('id, incident_type, severity, created_at, incident_date')
+    ).gte('created_at', thirtyDaysAgo.toISOString())
       .order('created_at', { ascending: true })
       .returns<Incident[]>(),
   ])

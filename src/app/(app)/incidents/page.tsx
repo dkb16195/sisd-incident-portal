@@ -51,10 +51,10 @@ export default async function IncidentsPage({
     query = query.eq('grade', profile.grade)
   }
 
-  if (params.status) query = query.eq('status', params.status)
-  if (params.severity) query = query.eq('severity', params.severity)
+  if (params.status) query = query.eq('status', params.status as any)
+  if (params.severity) query = query.eq('severity', params.severity as any)
   if (params.grade && profile?.role !== 'glc') query = query.eq('grade', params.grade)
-  if (params.type) query = query.eq('incident_type', params.type)
+  if (params.type) query = query.eq('incident_type', params.type as any)
   if (params.q) query = query.ilike('title', `%${params.q}%`)
 
   const { data: incidents } = await query.returns<IncidentWithStudents[]>()

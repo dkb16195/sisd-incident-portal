@@ -50,7 +50,7 @@ export default function IncidentsTrendChart({ data }: { data: DataPoint[] }) {
           tickLine={false}
         />
         <Tooltip
-          formatter={(val: number) => [val, 'Incidents']}
+          formatter={(val) => [val, 'Incidents']}
           labelFormatter={(label) => formatTick(label as string)}
           contentStyle={{
             fontSize: 12,

@@ -56,11 +56,9 @@ export default function IncidentTable({ incidents, currentUserId, userRole }: Pr
                   >
                     <div className="flex items-start gap-2">
                       {overdue && (
-                        <AlertTriangle
-                          size={14}
-                          className="text-amber-500 shrink-0 mt-0.5"
-                          title="Open for more than 14 days"
-                        />
+                        <span title="Open for more than 14 days">
+                          <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                        </span>
                       )}
                       <div>
                         <p className="font-medium text-gray-900 group-hover:text-[#1B3A6B] transition-colors leading-snug">

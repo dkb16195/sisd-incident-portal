@@ -50,7 +50,7 @@ export default function SeverityBreakdown({ data }: { data: DataPoint[] }) {
           ))}
         </Pie>
         <Tooltip
-          formatter={(val: number, name: string) => [val, LABELS[name] ?? name]}
+          formatter={(val, name) => [val, LABELS[String(name)] ?? name]}
           contentStyle={{
             fontSize: 12,
             borderRadius: 8,
