@@ -7,6 +7,7 @@ import IncidentStatusSelect from '@/components/incidents/IncidentStatusSelect'
 import InvestigationChecklist from '@/components/incidents/InvestigationChecklist'
 import CommentThread from '@/components/incidents/CommentThread'
 import StudentRoleList from '@/components/incidents/StudentRoleList'
+import IncidentAdminActions from '@/components/incidents/IncidentAdminActions'
 import { formatDate, getIncidentTypeLabel } from '@/lib/utils'
 import type { Profile, IncidentWithStudents, CommentWithAuthor } from '@/types/database'
 
@@ -57,7 +58,8 @@ export default async function IncidentDetailPage({
     .returns<CommentWithAuthor[]>()
 
   const loggedBy = incident.logged_by_profile
-  const canEdit = profile?.role !== 'glc' || incident.logged_by === user.id
+  const isAdmin = profile?.role === 'admin'
+  const isArchived = !!incident.archived_at
 
   return (
     <div className="p-8 max-w-4xl">
@@ -69,6 +71,14 @@ export default async function IncidentDetailPage({
         <ChevronLeft size={16} />
         All incidents
       </Link>
+
+      {/* Archived banner */}
+      {isArchived && (
+        <div className="mb-5 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 text-sm text-amber-800">
+          <span className="font-medium">Archived</span>
+          <span className="text-amber-600">— this incident has been archived and is hidden from the main list.</span>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -174,6 +184,14 @@ export default async function IncidentDetailPage({
             </p>
             <p className="font-mono text-gray-300 break-all">{incident.id}</p>
           </section>
+
+          {/* Admin actions */}
+          {isAdmin && (
+            <IncidentAdminActions
+              incidentId={incident.id}
+              isArchived={isArchived}
+            />
+          )}
         </div>
       </div>
     </div>

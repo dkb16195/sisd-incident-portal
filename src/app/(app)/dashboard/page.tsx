@@ -44,17 +44,17 @@ export default async function DashboardPage() {
     (isGLC
       ? supabase.from('incidents').select('*', { count: 'exact', head: true }).eq('grade', glcGrade)
       : supabase.from('incidents').select('*', { count: 'exact', head: true })
-    ).in('status', ['open', 'in_progress']),
+    ).in('status', ['open', 'in_progress']).is('archived_at', null),
 
     (isGLC
       ? supabase.from('incidents').select('*', { count: 'exact', head: true }).eq('grade', glcGrade)
       : supabase.from('incidents').select('*', { count: 'exact', head: true })
-    ).gte('created_at', startOfWeek.toISOString()),
+    ).gte('created_at', startOfWeek.toISOString()).is('archived_at', null),
 
     (isGLC
       ? supabase.from('incidents').select('*', { count: 'exact', head: true }).eq('grade', glcGrade)
       : supabase.from('incidents').select('*', { count: 'exact', head: true })
-    ).eq('status', 'resolved').gte('updated_at', startOfMonth.toISOString()),
+    ).eq('status', 'resolved').gte('updated_at', startOfMonth.toISOString()).is('archived_at', null),
 
     (isGLC
       ? supabase.from('incidents')

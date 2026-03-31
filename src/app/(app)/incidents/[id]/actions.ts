@@ -1,13 +1,23 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { IncidentStatus, StudentRole } from '@/types/database'
+import type { IncidentStatus, StudentRole, Profile } from '@/types/database'
 
 async function getUser() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   return { supabase, user }
+}
+
+async function requireAdmin() {
+  const { supabase, user } = await getUser()
+  if (!user) return { error: 'Not authenticated' as string, supabase, user }
+  const { data: profile } = await supabase
+    .from('profiles').select('role').eq('id', user.id).single<Pick<Profile, 'role'>>()
+  if (profile?.role !== 'admin') return { error: 'Admin access required' as string, supabase, user }
+  return { error: null, supabase, user }
 }
 
 // ── Update incident status ─────────────────────────────────────────────────
@@ -58,6 +68,39 @@ export async function saveChecklist(incidentId: string, data: ChecklistData) {
   if (error) return { error: error.message }
   revalidatePath(`/incidents/${incidentId}`)
   return {}
+}
+
+// ── Archive / unarchive incident ──────────────────────────────────────────
+export async function archiveIncident(incidentId: string, archive: boolean) {
+  const { error: authError, supabase } = await requireAdmin()
+  if (authError) return { error: authError }
+
+  const { error } = await supabase
+    .from('incidents')
+    .update({ archived_at: archive ? new Date().toISOString() : null })
+    .eq('id', incidentId)
+
+  if (error) return { error: error.message }
+  revalidatePath(`/incidents/${incidentId}`)
+  revalidatePath('/incidents')
+  revalidatePath('/dashboard')
+  return {}
+}
+
+// ── Delete incident (admin only, permanent) ────────────────────────────────
+export async function deleteIncident(incidentId: string) {
+  const { error: authError, supabase } = await requireAdmin()
+  if (authError) return { error: authError }
+
+  const { error } = await supabase
+    .from('incidents')
+    .delete()
+    .eq('id', incidentId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/incidents')
+  revalidatePath('/dashboard')
+  redirect('/incidents')
 }
 
 // ── Add comment ────────────────────────────────────────────────────────────

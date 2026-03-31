@@ -1,51 +1,51 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { Search, X } from 'lucide-react'
+import { Search, X, Archive } from 'lucide-react'
 import { useCallback, useTransition } from 'react'
 import { GRADES, INCIDENT_TYPE_LABELS, INCIDENT_STATUS_LABELS, SEVERITY_LABELS } from '@/lib/utils'
 
 interface Props {
   canChooseGrade: boolean
+  isAdmin?: boolean
   currentParams: {
     status?: string
     severity?: string
     grade?: string
     type?: string
     q?: string
+    archived?: string
   }
 }
 
 const STATUSES = ['open', 'in_progress', 'resolved', 'referred']
 const SEVERITIES = ['low', 'medium', 'high', 'critical']
-const TYPES = ['bullying', 'physical_altercation', 'verbal_misconduct', 'peer_conflict', 'social_media', 'theft', 'property_damage', 'safeguarding', 'other']
+const TYPES = [
+  'bullying', 'physical_altercation', 'verbal_misconduct', 'peer_conflict',
+  'social_media', 'theft', 'property_damage', 'safeguarding', 'vaping', 'contraband', 'other',
+]
 
-export default function IncidentFilters({ canChooseGrade, currentParams }: Props) {
+export default function IncidentFilters({ canChooseGrade, isAdmin, currentParams }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
 
   const update = useCallback(
     (key: string, value: string) => {
-      const params = new URLSearchParams()
       const merged = { ...currentParams, [key]: value }
-      Object.entries(merged).forEach(([k, v]) => {
-        if (v) params.set(k, v)
-      })
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`)
-      })
+      const params = new URLSearchParams()
+      Object.entries(merged).forEach(([k, v]) => { if (v) params.set(k, v) })
+      startTransition(() => router.replace(`${pathname}?${params.toString()}`))
     },
     [currentParams, pathname, router]
   )
 
   const clear = useCallback(() => {
-    startTransition(() => {
-      router.replace(pathname)
-    })
+    startTransition(() => router.replace(pathname))
   }, [pathname, router])
 
-  const hasFilters = Object.values(currentParams).some(Boolean)
+  const showArchived = currentParams.archived === '1'
+  const hasFilters = Object.entries(currentParams).some(([k, v]) => k !== 'archived' && !!v)
 
   return (
     <div className="flex flex-wrap items-center gap-2 mb-5">
@@ -111,7 +111,22 @@ export default function IncidentFilters({ canChooseGrade, currentParams }: Props
         </select>
       )}
 
-      {/* Clear */}
+      {/* Archived toggle — admin only */}
+      {isAdmin && (
+        <button
+          onClick={() => update('archived', showArchived ? '' : '1')}
+          className={`flex items-center gap-1.5 h-9 px-3 rounded-lg border text-sm font-medium transition-colors ${
+            showArchived
+              ? 'bg-amber-50 border-amber-300 text-amber-700'
+              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+          }`}
+        >
+          <Archive size={13} />
+          {showArchived ? 'Archived' : 'Show archived'}
+        </button>
+      )}
+
+      {/* Clear filters (not archived toggle) */}
       {hasFilters && (
         <button
           onClick={clear}

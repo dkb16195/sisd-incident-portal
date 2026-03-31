@@ -86,6 +86,7 @@ export interface Database {
           assigned_to: string | null
           created_at: string
           updated_at: string
+          archived_at: string | null
         }
         Insert: {
           id?: string
@@ -120,6 +121,7 @@ export interface Database {
           assigned_to?: string | null
           created_at?: string
           updated_at?: string
+          archived_at?: string | null
         }
         Relationships: [
           {

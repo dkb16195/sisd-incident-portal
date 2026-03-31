@@ -13,6 +13,7 @@ interface SearchParams {
   grade?: string
   type?: string
   q?: string
+  archived?: string
 }
 
 export default async function IncidentsPage({
@@ -51,6 +52,15 @@ export default async function IncidentsPage({
     query = query.eq('grade', profile.grade)
   }
 
+  const showArchived = params.archived === '1'
+
+  // By default hide archived; show only archived when toggled
+  if (showArchived) {
+    query = query.not('archived_at', 'is', null)
+  } else {
+    query = query.is('archived_at', null)
+  }
+
   if (params.status) query = query.eq('status', params.status as any)
   if (params.severity) query = query.eq('severity', params.severity as any)
   if (params.grade && profile?.role !== 'glc') query = query.eq('grade', params.grade)
@@ -60,6 +70,7 @@ export default async function IncidentsPage({
   const { data: incidents } = await query.returns<IncidentWithStudents[]>()
 
   const canChooseGrade = profile?.role !== 'glc'
+  const isAdmin = profile?.role === 'admin'
 
   return (
     <div className="p-8">
@@ -81,6 +92,7 @@ export default async function IncidentsPage({
 
       <IncidentFilters
         canChooseGrade={canChooseGrade}
+        isAdmin={isAdmin}
         currentParams={params}
       />
 
