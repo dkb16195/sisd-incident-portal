@@ -26,8 +26,13 @@ export const INCIDENT_TYPE_LABELS: Record<string, string> = {
   safeguarding: 'Safeguarding',
   vaping: 'Vaping',
   contraband: 'Contraband',
+  rule_of_25_behaviour: 'Rule of 25 — Behaviour',
+  rule_of_25_lates: 'Rule of 25 — Lates',
   other: 'Other',
 }
+
+// Incident types that automatically trigger a behaviour contract
+export const CONTRACT_TRIGGER_TYPES = ['rule_of_25_behaviour', 'rule_of_25_lates'] as const
 
 /**
  * Returns the display label for an incident type.

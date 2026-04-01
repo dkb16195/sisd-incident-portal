@@ -10,6 +10,8 @@ export type IncidentType =
   | 'safeguarding'
   | 'vaping'
   | 'contraband'
+  | 'rule_of_25_behaviour'
+  | 'rule_of_25_lates'
   | 'other'
 export type IncidentStatus = 'open' | 'in_progress' | 'resolved' | 'referred'
 export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical'

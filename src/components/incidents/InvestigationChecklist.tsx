@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { CheckSquare, Square, ChevronDown, ChevronUp } from 'lucide-react'
 import { saveChecklist, type ChecklistData } from '@/app/(app)/incidents/[id]/actions'
 import Button from '@/components/ui/Button'
-import { SANCTION_LABELS, SANCTION_TYPES } from '@/lib/utils'
+import { SANCTION_LABELS, SANCTION_TYPES, CONTRACT_TRIGGER_TYPES } from '@/lib/utils'
 import type { InvestigationChecklist as ChecklistType } from '@/types/database'
 
 // Non-sanctions checklist items
@@ -52,7 +52,8 @@ const BASE_ITEMS: BaseChecklistItem[] = [
 
 const TOTAL_ITEMS = BASE_ITEMS.length + 1 // + sanctions
 
-function initState(cl: ChecklistType | null): ChecklistData {
+function initState(cl: ChecklistType | null, incidentType?: string): ChecklistData {
+  const isContractTrigger = CONTRACT_TRIGGER_TYPES.includes(incidentType as typeof CONTRACT_TRIGGER_TYPES[number])
   return {
     statements_taken: cl?.statements_taken ?? false,
     statements_taken_date: cl?.statements_taken_date ?? null,
@@ -65,7 +66,8 @@ function initState(cl: ChecklistType | null): ChecklistData {
     referred_to_deputy_notes: cl?.referred_to_deputy_notes ?? null,
     sanctions_applied: cl?.sanctions_applied ?? false,
     sanctions_applied_date: cl?.sanctions_applied_date ?? null,
-    sanctions_applied_type: cl?.sanctions_applied_type ?? null,
+    // Auto-set behaviour_contract for Rule of 25 types if not already set
+    sanctions_applied_type: cl?.sanctions_applied_type ?? (isContractTrigger ? 'behaviour_contract' : null),
     sanctions_applied_notes: cl?.sanctions_applied_notes ?? null,
     follow_up_scheduled: cl?.follow_up_scheduled ?? false,
     follow_up_scheduled_date: cl?.follow_up_scheduled_date ?? null,
@@ -76,10 +78,12 @@ function initState(cl: ChecklistType | null): ChecklistData {
 interface Props {
   incidentId: string
   checklist: ChecklistType | null
+  incidentType?: string
 }
 
-export default function InvestigationChecklist({ incidentId, checklist }: Props) {
-  const [data, setData] = useState<ChecklistData>(() => initState(checklist))
+export default function InvestigationChecklist({ incidentId, checklist, incidentType }: Props) {
+  const [data, setData] = useState<ChecklistData>(() => initState(checklist, incidentType))
+  const isContractTrigger = CONTRACT_TRIGGER_TYPES.includes(incidentType as typeof CONTRACT_TRIGGER_TYPES[number])
   const [expanded, setExpanded] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -168,6 +172,14 @@ export default function InvestigationChecklist({ incidentId, checklist }: Props)
           <span className="text-xs text-gray-400">{complete}/{TOTAL_ITEMS}</span>
         </div>
       </div>
+
+      {/* Contract notice */}
+      {isContractTrigger && (
+        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-xs text-amber-800">
+          <p className="font-semibold mb-0.5">Behaviour contract required</p>
+          <p>Record the contract start date in the Sanctions section below. The 12-month review date will be calculated automatically.</p>
+        </div>
+      )}
 
       <div className="space-y-2">
         {/* Base items */}
@@ -273,13 +285,26 @@ export default function InvestigationChecklist({ incidentId, checklist }: Props)
               {isExpanded && (
                 <div className="px-4 pb-4 pt-1 bg-gray-50 border-t border-gray-100 space-y-3">
                   <div>
-                    <label className="text-xs text-gray-500 block mb-1">Date applied</label>
+                    <label className="text-xs text-gray-500 block mb-1">
+                      {isContractTrigger ? 'Contract start date' : 'Date applied'}
+                      {isContractTrigger && <span className="text-red-500 ml-0.5">*</span>}
+                    </label>
                     <input
                       type="date"
                       className="input h-8 text-xs w-44"
                       value={data.sanctions_applied_date ?? ''}
                       onChange={(e) => setField('sanctions_applied_date', e.target.value || null)}
                     />
+                    {isContractTrigger && data.sanctions_applied_date && (
+                      <p className="text-xs text-amber-700 mt-1.5 font-medium">
+                        12-month review:{' '}
+                        {new Date(
+                          new Date(data.sanctions_applied_date).setFullYear(
+                            new Date(data.sanctions_applied_date).getFullYear() + 1
+                          )
+                        ).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="text-xs text-gray-500 block mb-1">

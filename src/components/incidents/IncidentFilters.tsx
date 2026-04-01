@@ -22,7 +22,8 @@ const STATUSES = ['open', 'in_progress', 'resolved', 'referred']
 const SEVERITIES = ['low', 'medium', 'high', 'critical']
 const TYPES = [
   'bullying', 'physical_altercation', 'verbal_misconduct', 'peer_conflict',
-  'social_media', 'theft', 'property_damage', 'safeguarding', 'vaping', 'contraband', 'other',
+  'social_media', 'theft', 'property_damage', 'safeguarding', 'vaping', 'contraband',
+  'rule_of_25_behaviour', 'rule_of_25_lates', 'other',
 ]
 
 export default function IncidentFilters({ canChooseGrade, isAdmin, currentParams }: Props) {

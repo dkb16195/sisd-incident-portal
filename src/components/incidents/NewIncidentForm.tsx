@@ -6,7 +6,7 @@ import { createIncident, type NewIncidentData } from '@/app/(app)/incidents/acti
 import StudentSearch, { type SelectedStudent } from './StudentSearch'
 import Button from '@/components/ui/Button'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badge'
-import { cn, GRADES, INCIDENT_TYPE_LABELS, SEVERITY_LABELS, STUDENT_ROLE_LABELS, formatDate, getIncidentTypeLabel } from '@/lib/utils'
+import { cn, GRADES, INCIDENT_TYPE_LABELS, SEVERITY_LABELS, STUDENT_ROLE_LABELS, CONTRACT_TRIGGER_TYPES, formatDate, getIncidentTypeLabel } from '@/lib/utils'
 import type { IncidentType, IncidentSeverity } from '@/types/database'
 
 interface Props {
@@ -30,7 +30,8 @@ const today = new Date().toISOString().split('T')[0]
 
 const INCIDENT_TYPES: IncidentType[] = [
   'bullying', 'physical_altercation', 'verbal_misconduct', 'peer_conflict',
-  'social_media', 'theft', 'property_damage', 'safeguarding', 'vaping', 'contraband', 'other',
+  'social_media', 'theft', 'property_damage', 'safeguarding', 'vaping', 'contraband',
+  'rule_of_25_behaviour', 'rule_of_25_lates', 'other',
 ]
 
 const SEVERITIES: IncidentSeverity[] = ['low', 'medium', 'high', 'critical']
@@ -55,8 +56,14 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
   const [isPending, startTransition] = useTransition()
 
   function set(field: keyof FormState, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    // Reset students if grade changes
+    setForm((prev) => {
+      const next = { ...prev, [field]: value }
+      // Rule of 25 types must always be critical severity
+      if (field === 'incident_type' && CONTRACT_TRIGGER_TYPES.includes(value as typeof CONTRACT_TRIGGER_TYPES[number])) {
+        next.severity = 'critical'
+      }
+      return next
+    })
     if (field === 'grade') setStudents([])
   }
 
@@ -137,6 +144,15 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
       {/* ── Step 1: Incident Details ─────────────────────────────────────── */}
       {step === 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+
+          {/* Contract trigger warning */}
+          {CONTRACT_TRIGGER_TYPES.includes(form.incident_type as typeof CONTRACT_TRIGGER_TYPES[number]) && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg px-4 py-3 text-sm text-amber-800">
+              <p className="font-semibold mb-0.5">Behaviour contract will be required</p>
+              <p className="text-amber-700 text-xs">This incident type automatically triggers a behaviour contract. Severity is locked to Critical. Complete the investigation checklist to record the contract start date.</p>
+            </div>
+          )}
+
           <div>
             <label className="label">Incident title <span className="text-red-500">*</span></label>
             <input
@@ -171,16 +187,24 @@ export default function NewIncidentForm({ userGrade, userRole }: Props) {
             </div>
             <div>
               <label className="label">Severity <span className="text-red-500">*</span></label>
-              <select
-                className="input"
-                value={form.severity}
-                onChange={(e) => set('severity', e.target.value)}
-              >
-                <option value="">Select severity…</option>
-                {SEVERITIES.map((s) => (
-                  <option key={s} value={s}>{SEVERITY_LABELS[s]}</option>
-                ))}
-              </select>
+              {CONTRACT_TRIGGER_TYPES.includes(form.incident_type as typeof CONTRACT_TRIGGER_TYPES[number]) ? (
+                <input
+                  className="input bg-red-50 text-red-700 font-medium"
+                  value="Critical (locked)"
+                  disabled
+                />
+              ) : (
+                <select
+                  className="input"
+                  value={form.severity}
+                  onChange={(e) => set('severity', e.target.value)}
+                >
+                  <option value="">Select severity…</option>
+                  {SEVERITIES.map((s) => (
+                    <option key={s} value={s}>{SEVERITY_LABELS[s]}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 

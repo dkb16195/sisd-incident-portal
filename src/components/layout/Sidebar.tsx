@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   AlertTriangle,
   Users,
+  ScrollText,
   Settings,
   LogOut,
 } from 'lucide-react'
@@ -18,6 +19,7 @@ const nav = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/incidents', label: 'Incidents', icon: AlertTriangle },
   { href: '/students', label: 'Students', icon: Users },
+  { href: '/contracts', label: 'Contracts', icon: ScrollText },
 ]
 
 const adminNav = [

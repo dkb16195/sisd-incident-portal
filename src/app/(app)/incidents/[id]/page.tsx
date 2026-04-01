@@ -148,6 +148,7 @@ export default async function IncidentDetailPage({
           <InvestigationChecklist
             incidentId={incident.id}
             checklist={incident.investigation_checklist ?? null}
+            incidentType={incident.incident_type}
           />
 
           {/* Comments */}
