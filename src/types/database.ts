@@ -244,6 +244,165 @@ export interface Database {
           }
         ]
       }
+      pastoral_events: {
+        Row: {
+          id: string
+          event_uid: string
+          student: string
+          name: string
+          form: string
+          subject: string
+          teacher: string
+          event_date: string
+          description: string
+          grade_code: string
+          event_type: string
+          academic_year: string
+          uploaded_at: string
+          uploaded_by: string | null
+          upload_batch_id: string | null
+        }
+        Insert: {
+          id?: string
+          event_uid: string
+          student: string
+          name: string
+          form: string
+          subject?: string
+          teacher?: string
+          event_date: string
+          description?: string
+          grade_code: string
+          event_type: string
+          academic_year: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          upload_batch_id?: string | null
+        }
+        Update: {
+          id?: string
+          event_uid?: string
+          student?: string
+          name?: string
+          form?: string
+          subject?: string
+          teacher?: string
+          event_date?: string
+          description?: string
+          grade_code?: string
+          event_type?: string
+          academic_year?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          upload_batch_id?: string | null
+        }
+        Relationships: []
+      }
+      pastoral_upload_batches: {
+        Row: {
+          id: string
+          uploaded_by: string | null
+          uploaded_at: string
+          filename: string
+          rows_read: number
+          rows_inserted: number
+          rows_duplicate: number
+          rows_failed: number
+          latest_event_date: string | null
+        }
+        Insert: {
+          id?: string
+          uploaded_by?: string | null
+          uploaded_at?: string
+          filename: string
+          rows_read?: number
+          rows_inserted?: number
+          rows_duplicate?: number
+          rows_failed?: number
+          latest_event_date?: string | null
+        }
+        Update: {
+          id?: string
+          uploaded_by?: string | null
+          uploaded_at?: string
+          filename?: string
+          rows_read?: number
+          rows_inserted?: number
+          rows_duplicate?: number
+          rows_failed?: number
+          latest_event_date?: string | null
+        }
+        Relationships: []
+      }
+      pastoral_rule25_sent_log: {
+        Row: {
+          id: string
+          student: string
+          grade_code: string
+          academic_year: string
+          event_type: string
+          stage_sent: string
+          sent_at: string
+          sent_by: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          student: string
+          grade_code: string
+          academic_year: string
+          event_type: string
+          stage_sent: string
+          sent_at?: string
+          sent_by?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          student?: string
+          grade_code?: string
+          academic_year?: string
+          event_type?: string
+          stage_sent?: string
+          sent_at?: string
+          sent_by?: string | null
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      pastoral_flag_definitions: {
+        Row: {
+          id: string
+          flag_code: string
+          title: string
+          what_it_means: string
+          why_it_matters: string
+          suggested_action: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          flag_code: string
+          title: string
+          what_it_means?: string
+          why_it_matters?: string
+          suggested_action?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          flag_code?: string
+          title?: string
+          what_it_means?: string
+          why_it_matters?: string
+          suggested_action?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           id: string

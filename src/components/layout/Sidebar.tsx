@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Users,
   ScrollText,
+  BookOpen,
   Settings,
   LogOut,
 } from 'lucide-react'
@@ -20,6 +21,7 @@ const nav = [
   { href: '/incidents', label: 'Incidents', icon: AlertTriangle },
   { href: '/students', label: 'Students', icon: Users },
   { href: '/contracts', label: 'Contracts', icon: ScrollText },
+  { href: '/pastoral', label: 'Pastoral Tracker', icon: BookOpen },
 ]
 
 const adminNav = [
