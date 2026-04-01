@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { AlertTriangle, TrendingUp, Clock, CheckCircle, ExternalLink } from 'lucide-react'
+import { AlertTriangle, TrendingUp, Clock, CheckCircle, ExternalLink, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import IncidentsByTypeChart from '@/components/dashboard/IncidentsByTypeChart'
 import IncidentsTrendChart from '@/components/dashboard/IncidentsTrendChart'
@@ -156,12 +156,21 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1B3A6B]">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Welcome back, {profile?.full_name}
-          {profile?.role === 'glc' && profile.grade ? ` · ${profile.grade}` : ''}
-        </p>
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1B3A6B]">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Welcome back, {profile?.full_name}
+            {profile?.role === 'glc' && profile.grade ? ` · ${profile.grade}` : ''}
+          </p>
+        </div>
+        <Link
+          href="/incidents/new"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#1B3A6B] text-white text-sm font-medium rounded-lg hover:bg-[#1B3A6B]/90 transition-colors"
+        >
+          <Plus size={16} />
+          Log incident
+        </Link>
       </div>
 
       {/* Stat cards — clickable */}

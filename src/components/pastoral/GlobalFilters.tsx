@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { Search, X } from 'lucide-react'
-import { useCallback, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { PASTORAL_GRADES } from '@/lib/pastoral/utils'
 import type { PastoralFilters, FilterOptions } from '@/types/pastoral'
 
@@ -23,6 +23,13 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const [, startTransition] = useTransition()
+  const [studentInput, setStudentInput] = useState(current.student ?? '')
+  const studentDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Reset local input when filters are cleared externally
+  useEffect(() => {
+    if (!current.student) setStudentInput('')
+  }, [current.student])
 
   const update = useCallback(
     (updates: Partial<PastoralFilters>) => {
@@ -148,8 +155,15 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
           <input
             type="text"
             placeholder="Student name…"
-            value={current.student ?? ''}
-            onChange={(e) => update({ student: e.target.value })}
+            value={studentInput}
+            onChange={(e) => {
+              const val = e.target.value
+              setStudentInput(val)
+              if (studentDebounce.current) clearTimeout(studentDebounce.current)
+              studentDebounce.current = setTimeout(() => {
+                update({ student: val || undefined })
+              }, 400)
+            }}
             className="input pl-8 h-9 text-sm w-44"
           />
         </div>

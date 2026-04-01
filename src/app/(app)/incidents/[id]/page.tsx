@@ -8,6 +8,7 @@ import InvestigationChecklist from '@/components/incidents/InvestigationChecklis
 import CommentThread from '@/components/incidents/CommentThread'
 import StudentRoleList from '@/components/incidents/StudentRoleList'
 import IncidentAdminActions from '@/components/incidents/IncidentAdminActions'
+import ISAMSIncidentExport from '@/components/incidents/ISAMSIncidentExport'
 import { formatDate, getIncidentTypeLabel } from '@/lib/utils'
 import type { Profile, IncidentWithStudents, CommentWithAuthor } from '@/types/database'
 
@@ -185,6 +186,9 @@ export default async function IncidentDetailPage({
             </p>
             <p className="font-mono text-gray-300 break-all">{incident.id}</p>
           </section>
+
+          {/* iSAMS export */}
+          <ISAMSIncidentExport incident={incident} />
 
           {/* Admin actions */}
           {isAdmin && (
