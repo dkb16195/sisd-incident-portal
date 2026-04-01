@@ -5,6 +5,7 @@ import GlobalFilters from '@/components/pastoral/GlobalFilters'
 import ExportButton from '@/components/pastoral/ExportButton'
 import type { Profile } from '@/types/database'
 import type { PastoralEvent, PastoralFilters, FilterOptions, StudentMetrics } from '@/types/pastoral'
+import { fetchAllRows } from '@/lib/supabase/fetchAll'
 
 interface SearchParams extends PastoralFilters {
   weekEnding?: string
@@ -40,22 +41,23 @@ export default async function WeeklyReportPage({ searchParams }: { searchParams:
   const prevWeekStart = daysAgoDate(14, new Date(weekEndingDate))
 
   // Fetch 28 days of events (enough for all metrics)
-  let query = supabase
-    .from('pastoral_events')
-    .select('student, grade_code, form, subject, event_type, event_date')
-    .gte('event_date', d28Ago)
-    .lte('event_date', weekEndingDate)
-
-  if (selectedGrade) query = query.eq('grade_code', selectedGrade)
-  if (params.form) query = query.eq('form', params.form)
-  if (params.student) query = query.ilike('student', `%${params.student}%`)
-
-  const { data: events } = await query.returns<Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'subject' | 'event_type' | 'event_date'>[]>()
+  type ReportEvent = Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'subject' | 'event_type' | 'event_date'>
+  const events = await fetchAllRows<ReportEvent>((rangeFrom, rangeTo) => {
+    let q = supabase
+      .from('pastoral_events')
+      .select('student, grade_code, form, subject, event_type, event_date')
+      .gte('event_date', d28Ago)
+      .lte('event_date', weekEndingDate)
+    if (selectedGrade) q = q.eq('grade_code', selectedGrade)
+    if (params.form) q = q.eq('form', params.form)
+    if (params.student) q = q.ilike('student', `%${params.student}%`)
+    return q.range(rangeFrom, rangeTo).returns<ReportEvent[]>()
+  })
 
   // Build per-student metrics
-  type EventItem = NonNullable<typeof events>[number]
+  type EventItem = ReportEvent
   const studentMap = new Map<string, { grade_code: string; form: string; events: EventItem[] }>()
-  for (const ev of events ?? []) {
+  for (const ev of events) {
     if (!studentMap.has(ev.student)) studentMap.set(ev.student, { grade_code: ev.grade_code, form: ev.form, events: [] })
     studentMap.get(ev.student)!.events.push(ev)
   }
@@ -144,7 +146,7 @@ export default async function WeeklyReportPage({ searchParams }: { searchParams:
 
   const options: FilterOptions = {
     grades: [...PASTORAL_GRADES],
-    forms: [...new Set((events ?? []).map((e) => e.form))].sort(),
+    forms: [...new Set(events.map((e) => e.form))].sort(),
     subjects: [], teachers: [],
   }
 

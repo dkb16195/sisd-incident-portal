@@ -6,6 +6,7 @@ import TrendsChart from '@/components/pastoral/TrendsChart'
 import ExportButton from '@/components/pastoral/ExportButton'
 import type { Profile } from '@/types/database'
 import type { PastoralEvent, PastoralFilters, FilterOptions, TrendPoint, GroupByRow } from '@/types/pastoral'
+import { fetchAllRows } from '@/lib/supabase/fetchAll'
 
 interface SearchParams extends PastoralFilters {
   groupBy?: string
@@ -30,20 +31,21 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
   const showMA = params.showMA === '1'
   const inverseView = params.inverseView === '1'
 
-  // Fetch filtered events
-  let query = supabase
-    .from('pastoral_events')
-    .select('student, grade_code, form, subject, teacher, event_type, event_date')
-    .gte('event_date', from)
-    .lte('event_date', to)
-
-  if (params.grade) query = query.eq('grade_code', params.grade)
-  if (params.form) query = query.eq('form', params.form)
-  if (params.subject) query = query.eq('subject', params.subject)
-  if (params.teacher) query = query.eq('teacher', params.teacher)
-  if (params.student) query = query.ilike('student', `%${params.student}%`)
-
-  const { data: events } = await query.returns<Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'subject' | 'teacher' | 'event_type' | 'event_date'>[]>()
+  // Fetch filtered events — paginated to bypass PostgREST max-rows limit
+  type EventRow = Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'subject' | 'teacher' | 'event_type' | 'event_date'>
+  const events = await fetchAllRows<EventRow>((rangeFrom, rangeTo) => {
+    let q = supabase
+      .from('pastoral_events')
+      .select('student, grade_code, form, subject, teacher, event_type, event_date')
+      .gte('event_date', from)
+      .lte('event_date', to)
+    if (params.grade) q = q.eq('grade_code', params.grade)
+    if (params.form) q = q.eq('form', params.form)
+    if (params.subject) q = q.eq('subject', params.subject)
+    if (params.teacher) q = q.eq('teacher', params.teacher)
+    if (params.student) q = q.ilike('student', `%${params.student}%`)
+    return q.range(rangeFrom, rangeTo).returns<EventRow[]>()
+  })
 
   // Build daily buckets
   const dayMap = new Map<string, { interventions: number; housePoints: number; lates: number }>()
@@ -55,7 +57,7 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
     dayMap.set(key, { interventions: 0, housePoints: 0, lates: 0 })
   }
 
-  for (const ev of events ?? []) {
+  for (const ev of events) {
     const day = ev.event_date
     if (!dayMap.has(day)) continue
     const bucket = dayMap.get(day)!
@@ -80,7 +82,6 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
   }))
 
   // Group-by aggregation
-  type EventRow = Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'subject' | 'teacher' | 'event_type' | 'event_date'>
   const groupByKey = (ev: EventRow): string => {
     switch (groupBy) {
       case 'grade': return ev.grade_code
@@ -92,7 +93,7 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
   }
 
   const groupMap = new Map<string, GroupByRow>()
-  for (const ev of events ?? []) {
+  for (const ev of events) {
     const key = groupByKey(ev)
     if (!groupMap.has(key)) groupMap.set(key, { label: key, interventions: 0, housePoints: 0, lates: 0, total: 0 })
     const row = groupMap.get(key)!
@@ -105,19 +106,12 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
     .sort((a, b) => b.total - a.total)
     .slice(0, 100) // cap for performance
 
-  // Filter options
-  const { data: optionData } = await supabase
-    .from('pastoral_events')
-    .select('form, subject, teacher')
-    .gte('event_date', from)
-    .lte('event_date', to)
-    .returns<{ form: string; subject: string; teacher: string }[]>()
-
+  // Filter options — derive from already-fetched events to avoid a second round-trip
   const options: FilterOptions = {
     grades: [...PASTORAL_GRADES],
-    forms: [...new Set((optionData ?? []).map((r) => r.form))].sort(),
-    subjects: [...new Set((optionData ?? []).map((r) => r.subject).filter(Boolean))].sort(),
-    teachers: [...new Set((optionData ?? []).map((r) => r.teacher).filter(Boolean))].sort(),
+    forms: [...new Set(events.map((r) => r.form))].sort(),
+    subjects: [...new Set(events.map((r) => r.subject).filter(Boolean))].sort(),
+    teachers: [...new Set(events.map((r) => r.teacher).filter(Boolean))].sort(),
   }
 
   const currentFilters: PastoralFilters = {
@@ -142,7 +136,7 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#1B3A6B]">Trends</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{from} to {to} · {(events ?? []).length.toLocaleString()} events</p>
+          <p className="text-sm text-gray-500 mt-0.5">{from} to {to} · {events.length.toLocaleString()} events</p>
         </div>
       </div>
 

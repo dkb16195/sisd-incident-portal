@@ -5,6 +5,7 @@ import MarkSentButton from '@/components/pastoral/MarkSentButton'
 import ExportButton from '@/components/pastoral/ExportButton'
 import type { Profile } from '@/types/database'
 import type { PastoralEvent, Rule25SentLog, Rule25Row } from '@/types/pastoral'
+import { fetchAllRows } from '@/lib/supabase/fetchAll'
 
 const STAGES_INTERVENTIONS = [
   '1st warning – Interventions',
@@ -45,19 +46,20 @@ export default async function Rule25Page({ searchParams }: { searchParams: Promi
   const eventType = tab === 'lates' ? 'Late' : 'Intervention'
 
   // Fetch all relevant events from academic year start
-  let evQuery = supabase
-    .from('pastoral_events')
-    .select('student, grade_code, form, event_type')
-    .eq('event_type', eventType)
-    .eq('academic_year', ayLabel)
-
-  if (selectedGrade) evQuery = evQuery.eq('grade_code', selectedGrade)
-
-  const { data: events } = await evQuery.returns<Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'event_type'>[]>()
+  type AyEvent = Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'event_type'>
+  const events = await fetchAllRows<AyEvent>((rangeFrom, rangeTo) => {
+    let q = supabase
+      .from('pastoral_events')
+      .select('student, grade_code, form, event_type')
+      .eq('event_type', eventType)
+      .eq('academic_year', ayLabel)
+    if (selectedGrade) q = q.eq('grade_code', selectedGrade)
+    return q.range(rangeFrom, rangeTo).returns<AyEvent[]>()
+  })
 
   // Aggregate counts per student
   const studentMap = new Map<string, { student: string; grade_code: string; form: string; count: number }>()
-  for (const ev of events ?? []) {
+  for (const ev of events) {
     const key = ev.student
     if (!studentMap.has(key)) {
       studentMap.set(key, { student: ev.student, grade_code: ev.grade_code, form: ev.form, count: 0 })

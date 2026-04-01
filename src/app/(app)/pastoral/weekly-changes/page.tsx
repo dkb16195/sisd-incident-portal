@@ -4,6 +4,7 @@ import { getRequiredStage, currentAcademicYear, isoDate, daysAgoDate, PASTORAL_G
 import ExportButton from '@/components/pastoral/ExportButton'
 import type { Profile } from '@/types/database'
 import type { PastoralEvent, Rule25SentLog, WeeklyChangeRow } from '@/types/pastoral'
+import { fetchAllRows } from '@/lib/supabase/fetchAll'
 
 interface SearchParams {
   grade?: string
@@ -42,21 +43,23 @@ export default async function WeeklyChangesPage({ searchParams }: { searchParams
   // Get all intervention events since academic year start, up to weekEndingDate
   const ayStart = isoDate(new Date(parseInt(ayLabel.split('-')[0]), 7, 1))
 
-  let evQuery = supabase
-    .from('pastoral_events')
-    .select('student, grade_code, form, event_date')
-    .eq('event_type', 'Intervention')
-    .eq('academic_year', ayLabel)
-    .lte('event_date', weekEndingDate)
-
-  if (selectedGrade) evQuery = evQuery.eq('grade_code', selectedGrade)
-  const { data: events } = await evQuery.returns<Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'event_date'>[]>()
+  type ChangeEvent = Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'event_date'>
+  const events = await fetchAllRows<ChangeEvent>((rangeFrom, rangeTo) => {
+    let q = supabase
+      .from('pastoral_events')
+      .select('student, grade_code, form, event_date')
+      .eq('event_type', 'Intervention')
+      .eq('academic_year', ayLabel)
+      .lte('event_date', weekEndingDate)
+    if (selectedGrade) q = q.eq('grade_code', selectedGrade)
+    return q.range(rangeFrom, rangeTo).returns<ChangeEvent[]>()
+  })
 
   // Count cumulative totals per student up to weekEnding and up to prevWeekEnd
   const countNow = new Map<string, { student: string; grade_code: string; form: string; count: number }>()
   const countPrev = new Map<string, number>()
 
-  for (const ev of events ?? []) {
+  for (const ev of events) {
     const key = ev.student
     if (!countNow.has(key)) countNow.set(key, { student: ev.student, grade_code: ev.grade_code, form: ev.form, count: 0 })
     countNow.get(key)!.count++

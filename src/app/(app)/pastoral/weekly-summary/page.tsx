@@ -4,6 +4,7 @@ import { isoDate, daysAgoDate, PASTORAL_GRADES } from '@/lib/pastoral/utils'
 import ExportButton from '@/components/pastoral/ExportButton'
 import type { Profile } from '@/types/database'
 import type { PastoralEvent } from '@/types/pastoral'
+import { fetchAllRows } from '@/lib/supabase/fetchAll'
 
 interface SearchParams {
   grade?: string
@@ -36,22 +37,24 @@ export default async function WeeklySummaryPage({ searchParams }: { searchParams
   const weekStartDate = daysAgoDate(7, new Date(weekEndingDate))
 
   // Fetch all events in the 7-day window
-  let evQuery = supabase
-    .from('pastoral_events')
-    .select('student, grade_code, form, event_type, event_date')
-    .gte('event_date', weekStartDate)
-    .lte('event_date', weekEndingDate)
+  type WeekEvent = Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'event_type' | 'event_date'>
+  const events = await fetchAllRows<WeekEvent>((rangeFrom, rangeTo) => {
+    let q = supabase
+      .from('pastoral_events')
+      .select('student, grade_code, form, event_type, event_date')
+      .gte('event_date', weekStartDate)
+      .lte('event_date', weekEndingDate)
+    if (selectedGrade) q = q.eq('grade_code', selectedGrade)
+    return q.range(rangeFrom, rangeTo).returns<WeekEvent[]>()
+  })
 
-  if (selectedGrade) evQuery = evQuery.eq('grade_code', selectedGrade)
-  const { data: events } = await evQuery.returns<Pick<PastoralEvent, 'student' | 'grade_code' | 'form' | 'event_type' | 'event_date'>[]>()
-
-  const hasLatesData = (events ?? []).some((e) => e.event_type === 'Late')
+  const hasLatesData = events.some((e) => e.event_type === 'Late')
 
   // Per-student counts by grade
   type StudentCounts = { student: string; form: string; grade_code: string; interventions: number; housePoints: number; lates: number }
   const studentData = new Map<string, StudentCounts>()
 
-  for (const ev of events ?? []) {
+  for (const ev of events) {
     const key = `${ev.student}|${ev.grade_code}`
     if (!studentData.has(key)) {
       studentData.set(key, { student: ev.student, form: ev.form, grade_code: ev.grade_code, interventions: 0, housePoints: 0, lates: 0 })
