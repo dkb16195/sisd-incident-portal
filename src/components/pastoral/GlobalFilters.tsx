@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Search, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { PASTORAL_GRADES } from '@/lib/pastoral/utils'
@@ -22,6 +22,7 @@ interface Props {
 export default function GlobalFilters({ current, options, hide = [] }: Props) {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
   const [studentInput, setStudentInput] = useState(current.student ?? '')
   const studentDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -31,22 +32,24 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
     if (!current.student) setStudentInput('')
   }, [current.student])
 
+  // Build next URL from the live browser URL params (not stale server props)
   const update = useCallback(
     (updates: Partial<PastoralFilters>) => {
-      const merged = { ...current, ...updates }
+      const live = Object.fromEntries(searchParams.entries())
+      const merged = { ...live, ...updates }
       const params = new URLSearchParams()
       Object.entries(merged).forEach(([k, v]) => { if (v) params.set(k, v) })
       startTransition(() => router.replace(`${pathname}?${params.toString()}`))
     },
-    [current, pathname, router]
+    [searchParams, pathname, router]
   )
 
   const clear = useCallback(() => {
     startTransition(() => router.replace(pathname))
   }, [pathname, router])
 
-  const hasFilters = Object.values(current).some(Boolean)
-  const activePreset = current.preset
+  const hasFilters = searchParams.size > 0
+  const activePreset = searchParams.get('preset') ?? undefined
 
   return (
     <div className="flex flex-wrap items-center gap-2 mb-5">
@@ -83,14 +86,14 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
           <input
             type="date"
             className="input h-9 text-sm w-36"
-            value={current.dateFrom ?? ''}
+            value={searchParams.get('dateFrom') ?? ''}
             onChange={(e) => update({ dateFrom: e.target.value })}
           />
           <span className="text-gray-400 text-sm">–</span>
           <input
             type="date"
             className="input h-9 text-sm w-36"
-            value={current.dateTo ?? ''}
+            value={searchParams.get('dateTo') ?? ''}
             onChange={(e) => update({ dateTo: e.target.value })}
           />
         </>
@@ -99,7 +102,7 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
       {/* Grade */}
       {!hide.includes('grade') && (
         <select
-          value={current.grade ?? ''}
+          value={searchParams.get('grade') ?? ''}
           onChange={(e) => update({ grade: e.target.value, form: undefined })}
           className="input h-9 text-sm w-32"
         >
@@ -113,13 +116,13 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
       {/* Form */}
       {!hide.includes('form') && options?.forms && options.forms.length > 0 && (
         <select
-          value={current.form ?? ''}
+          value={searchParams.get('form') ?? ''}
           onChange={(e) => update({ form: e.target.value })}
           className="input h-9 text-sm w-32"
         >
           <option value="">All forms</option>
           {options.forms
-            .filter((f) => !current.grade || f.startsWith(current.grade.replace('G', 'G')))
+            .filter((f) => !searchParams.get('grade') || f.startsWith(searchParams.get('grade')!))
             .map((f) => <option key={f} value={f}>{f}</option>)}
         </select>
       )}
@@ -127,7 +130,7 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
       {/* Subject */}
       {!hide.includes('subject') && options?.subjects && options.subjects.length > 0 && (
         <select
-          value={current.subject ?? ''}
+          value={searchParams.get('subject') ?? ''}
           onChange={(e) => update({ subject: e.target.value })}
           className="input h-9 text-sm w-40"
         >
@@ -139,7 +142,7 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
       {/* Teacher */}
       {!hide.includes('teacher') && options?.teachers && options.teachers.length > 0 && (
         <select
-          value={current.teacher ?? ''}
+          value={searchParams.get('teacher') ?? ''}
           onChange={(e) => update({ teacher: e.target.value })}
           className="input h-9 text-sm w-44"
         >
@@ -162,7 +165,7 @@ export default function GlobalFilters({ current, options, hide = [] }: Props) {
               if (studentDebounce.current) clearTimeout(studentDebounce.current)
               studentDebounce.current = setTimeout(() => {
                 update({ student: val || undefined })
-              }, 400)
+              }, 350)
             }}
             className="input pl-8 h-9 text-sm w-44"
           />
